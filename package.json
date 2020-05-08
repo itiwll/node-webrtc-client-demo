@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "browserify-middleware": "^8.1.1",
+    "express": "^4.17.1",
+    "express-ws": "^4.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "wrtc": "^0.4.4"
+  },
+  "scripts": {
+    "start": "node --inspect server.js"
+  },
+  "name": "node-webrtc-client-demo",
+  "version": "1.0.0",
+  "main": "server.js",
+  "license": "MIT"
+}
