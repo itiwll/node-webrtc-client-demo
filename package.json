@@ -6,6 +6,7 @@
     "express-ws": "^4.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "fluent-ffmpeg-multistream": "^1.0.0",
+    "speaker": "^0.5.1",
     "wrtc": "^0.4.4"
   },
   "scripts": {

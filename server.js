@@ -10,6 +10,7 @@ const ffmpeg = require('fluent-ffmpeg')
 const { StreamInput } = require('fluent-ffmpeg-multistream')
 const app = express();
 require('express-ws')(app);
+const Speaker = require('speaker')
 
 
 app.use(bodyParser.json());
@@ -63,27 +64,29 @@ app.ws("/", async (ws, req) => {
 
   rc.ontrack = (e) => {
     const audioSink = new RTCAudioSink(e.track);
-    const stream = new PassThrough();
-    const proc = ffmpeg()
-      .addInput((new StreamInput(stream)).url)
-      .addInputOptions([
-        '-f s16le',
-        '-ar 48k',
-        '-ac 1',
-      ])
-      .on('start', () => {
-        console.log('Start recording >> ')
-      })
-      .on('end', () => {
-        console.log('Stop recording >> ')
-      })
-      .output("test.mp3");
+    const speaker = new Speaker({ channels: 1, bitDepth: 16, sampleRate: 48000, signed: true })
+    // const stream = new PassThrough();
+    // const proc = ffmpeg()
+    //   .addInput((new StreamInput(stream)).url)
+    //   .addInputOptions([
+    //     '-f s16le',
+    //     '-ar 48k',
+    //     '-ac 1',
+    //   ])
+    //   .on('start', () => {
+    //     console.log('Start recording >> ')
+    //   })
+    //   .on('end', () => {
+    //     console.log('Stop recording >> ')
+    //   })
+    //   .output("test.mp3");
 
-    proc.run();
+    // proc.run();
 
     const onAudioData = (data) => {
-      debugger
-      stream.push(Buffer.from(data.samples.buffer))
+      // console.log('Speaker is playing the audio')
+      speaker.write(Buffer.from(data.samples.buffer))
+      // stream.push(Buffer.from(data.samples.buffer))
     };
 
     audioSink.addEventListener('data', onAudioData);
