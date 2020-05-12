@@ -2,9 +2,12 @@ const bodyParser = require('body-parser');
 const browserify = require('browserify-middleware');
 const express = require('express');
 const { join } = require('path');
-const { RTCPeerConnection, RTCIceCandidate, MediaStream } = require('wrtc');
+const { RTCPeerConnection, RTCIceCandidate, MediaStream, nonstandard: { RTCAudioSink } } = require('wrtc');
 const RTCAudioSource = require('./RTCAudioSource');
 const RTCVideoSource = require('./RTCVideoSource');
+const { PassThrough } = require('stream')
+const ffmpeg = require('fluent-ffmpeg')
+const { StreamInput } = require('fluent-ffmpeg-multistream')
 const app = express();
 require('express-ws')(app);
 
@@ -17,7 +20,7 @@ app.ws("/", async (ws, req) => {
 
   // # 1 创建服务器端 rc
   const rc = new RTCPeerConnection({
-    // sdpSemantics: 'unified-plan',
+    sdpSemantics: 'unified-plan',
     iceServers: [
       {
         urls: 'stun:stun.l.google.com:19302'
@@ -40,6 +43,8 @@ app.ws("/", async (ws, req) => {
   rc.addTrack(audioTrack, mediaStream);
   rc.addTrack(videoTrack, mediaStream);
 
+
+
   rc.addEventListener("icecandidate", function ({ candidate }) {
     if (!candidate) return;
     ws.send(JSON.stringify({ type: "candidate", data: candidate }));
@@ -53,6 +58,36 @@ app.ws("/", async (ws, req) => {
     //   rtcVideoSourve.stop();
     // }
   })
+
+
+
+  rc.ontrack = (e) => {
+    const audioSink = new RTCAudioSink(e.track);
+    const stream = new PassThrough();
+    const proc = ffmpeg()
+      .addInput((new StreamInput(stream)).url)
+      .addInputOptions([
+        '-f s16le',
+        '-ar 48k',
+        '-ac 1',
+      ])
+      .on('start', () => {
+        console.log('Start recording >> ')
+      })
+      .on('end', () => {
+        console.log('Stop recording >> ')
+      })
+      .output("test.mp3");
+
+    proc.run();
+
+    const onAudioData = (data) => {
+      debugger
+      stream.push(Buffer.from(data.samples.buffer))
+    };
+
+    audioSink.addEventListener('data', onAudioData);
+  }
 
 
 

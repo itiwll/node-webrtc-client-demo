@@ -60,9 +60,18 @@ startButton.addEventListener("click", async () => {
       await rc.setRemoteDescription(data.data);
 
       // # 6 获取远程 stream
-      console.log("receivers", rc.getReceivers());
       const remoteStream = new MediaStream(rc.getReceivers().map(receiver => receiver.track));
       remoteVideo.srcObject = remoteStream;
+
+      const localStream = await window.navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false
+      });
+
+      localStream.getTracks().forEach(track => {
+        rc.addTrack(track)
+      });
+
 
       // # 7 设置客户端本地 description
       const answer = await rc.createAnswer();
